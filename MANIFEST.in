@@ -1,0 +1,2 @@
+include versioneer.py
+include nmma_db/_version.py
