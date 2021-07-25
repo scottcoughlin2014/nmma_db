@@ -152,14 +152,12 @@ class LightcurveFit(Base):
     object_id = sa.Column(
         sa.String,
         primary_key=True,
-        unique=True,
         nullable=False,
         doc='Name of object being fit')
 
     model_name = sa.Column(
         sa.String,
         primary_key=True,
-        unique=True,
         nullable=False,
         doc='Model name')
 

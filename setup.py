@@ -66,6 +66,7 @@ install_requires = [
 # test dependencies
 tests_require = [
     'pytest>=3.1',
+    'pytest-aiohttp',
     'freezegun',
     'sqlparse',
     'bs4',

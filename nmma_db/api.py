@@ -15,7 +15,7 @@ import traceback
 from typing import List, Mapping, Optional, Sequence, Union
 import uvloop
 
-from nmma_db.models import DBSession, init_db, LightcurveFit 
+from nmma_db.models import DBSession, LightcurveFit 
 from nmma_db.fit import fit_lc
 
 class Handler:
@@ -209,20 +209,9 @@ async def app_factory():
         App Factory
     :return:
     """
-    # init db if necessary
-    conn = init_db(user=os.environ['USER'], database='nmma', port=5432)
 
     # init app with auth and error handling middlewares
     app = web.Application()
-
-    # store mongo connection
-    app["conn"] = conn
-
-    # graciously close sql client on shutdown
-    async def close_sql(_app):
-        _app["conn"].client.close()
-
-    app.on_cleanup.append(close_sql)
 
     # OpenAPI docs:
     s = SwaggerDocs(
@@ -243,8 +232,8 @@ async def app_factory():
         [
             web.get("/", ping, name="root", allow_head=False),
             # fits:
-            web.post("/api/fits", fit_handler.post),
-            web.get("/api/fits", fit_handler.get),
+            web.post("/api/fit", fit_handler.post),
+            web.get("/api/fit", fit_handler.get),
         ]
     )
 
