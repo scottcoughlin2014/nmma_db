@@ -1,22 +1,14 @@
 from abc import ABC
-from aiohttp import web, ClientSession
+from aiohttp import web
 from aiohttp_swagger3 import SwaggerDocs, ReDocUiSettings
-from astropy.io import fits
-from ast import literal_eval
-from bson.json_util import dumps, loads
-import datetime
-import io
-from multidict import MultiDict
-import numpy as np
+from bson.json_util import dumps
 from odmantic import Model
-import os
-import pathlib
-import traceback
-from typing import List, Mapping, Optional, Sequence, Union
+from typing import List, Mapping, Optional
 import uvloop
 
-from nmma_db.models import DBSession, LightcurveFit 
+from nmma_db.models import DBSession, LightcurveFit
 from nmma_db.fit import fit_lc
+
 
 class Handler:
     @staticmethod
@@ -66,6 +58,7 @@ async def ping(request: web.Request) -> web.Response:
     return web.json_response(
         {"status": "success", "message": "greetings from NMMA!"}, status=200
     )
+
 
 class LightcurveFitModel(Model, ABC):
     """Data model for light curve fitter for streamlined validation"""
@@ -126,18 +119,25 @@ class LightcurveFitHandler(Handler):
         if self.test:
             return self.success(message="submitted")
 
-        model_name = _data.get('model_name')
-        cand_name = _data.get('cand_name')
-        nmma_data = _data.get('nmma_data')
+        model_name = _data.get("model_name")
+        cand_name = _data.get("cand_name")
+        nmma_data = _data.get("nmma_data")
 
-        posterior_samples, bestfit_params, bestfit_lightcurve, log_bayes_factor = fit_lc(model_name, cand_name, nmma_data)
-          
-        lcfit = LightcurveFit(object_id=cand_name,
-                              model_name=model_name,
-                              posterior_samples=posterior_samples.to_json(),
-                              bestfit_lightcurve=bestfit_lightcurve.to_json(),
-                              log_bayes_factor=log_bayes_factor) 
-              
+        (
+            posterior_samples,
+            bestfit_params,
+            bestfit_lightcurve,
+            log_bayes_factor,
+        ) = fit_lc(model_name, cand_name, nmma_data)
+
+        lcfit = LightcurveFit(
+            object_id=cand_name,
+            model_name=model_name,
+            posterior_samples=posterior_samples.to_json(),
+            bestfit_lightcurve=bestfit_lightcurve.to_json(),
+            log_bayes_factor=log_bayes_factor,
+        )
+
         DBSession().add(lcfit)
         DBSession().commit()
 
@@ -194,15 +194,20 @@ class LightcurveFitHandler(Handler):
         """
         _data = await request.json()
 
-        model_name = _data.get('model_name')
-        cand_name = _data.get('cand_name')
+        model_name = _data.get("model_name")
+        cand_name = _data.get("cand_name")
 
-        lcfit = LightcurveFit.query.filter_by(model_name=model_name, object_id=cand_name).one()
+        lcfit = LightcurveFit.query.filter_by(
+            model_name=model_name, object_id=cand_name
+        ).one()
 
         if lcfit is not None:
             return self.success(
-                message=f"Retrieved fit {model_name} of {cand_name}", data=lcfit.to_dict())
+                message=f"Retrieved fit {model_name} of {cand_name}",
+                data=lcfit.to_dict(),
+            )
         return self.error(message=f"Fit {model_name} of {cand_name} not found")
+
 
 async def app_factory():
     """

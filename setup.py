@@ -25,95 +25,93 @@
 
 from __future__ import print_function
 
-import os, sys
-from distutils.version import LooseVersion
+import os
+import sys
 
-from setuptools import (setup, find_packages,
-                        __version__ as setuptools_version)
+from setuptools import setup, find_packages
 
-def get_scripts(scripts_dir='bin'):
-    """Get relative file paths for all files under the ``scripts_dir``
-    """ 
+import versioneer
+
+
+def get_scripts(scripts_dir="bin"):
+    """Get relative file paths for all files under the ``scripts_dir``"""
     scripts = []
     for (dirname, _, filenames) in os.walk(scripts_dir):
         scripts.extend([os.path.join(dirname, fn) for fn in filenames])
     return scripts
 
-import versioneer
-#from setup_utils import (CMDCLASS, get_setup_requires, get_scripts)
+
+# from setup_utils import (CMDCLASS, get_setup_requires, get_scripts)
 
 # -- dependencies -------------------------------------------------------------
 
 # build dependencies
-#setup_requires = get_setup_requires()
+# setup_requires = get_setup_requires()
 
 # package dependencies
 install_requires = [
-    'aiohttp',
-    'aiohttp_swagger3',
-    'arrow',
-    'bilby_pipe',
-    'nmma',
-    'odmantic',
-    'psycopg2',
-    'pymongo',
-    'redis',
-    'simplejson',
-    'sqlalchemy',
-    'uvloop'
+    "aiohttp",
+    "aiohttp_swagger3",
+    "arrow",
+    "bilby_pipe",
+    "nmma",
+    "odmantic",
+    "psycopg2",
+    "pymongo",
+    "redis",
+    "simplejson",
+    "sqlalchemy",
+    "uvloop",
 ]
 
 # test dependencies
 tests_require = [
-    'pytest>=3.1',
-    'pytest-aiohttp',
-    'freezegun',
-    'sqlparse',
-    'bs4',
+    "pytest>=3.1",
+    "pytest-aiohttp",
+    "freezegun",
+    "sqlparse",
+    "bs4",
 ]
-if sys.version < '3':
-    tests_require.append('mock')
+if sys.version < "3":
+    tests_require.append("mock")
 
 # -- run setup ----------------------------------------------------------------
 
 setup(
     # metadata
-    name='nmma_db',
-    provides=['nmma_db'],
+    name="nmma_db",
+    provides=["nmma_db"],
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description="A python package for setting up NMMA based fits",
     long_description=("nmma is a python package for setting up NMMA based fits"),
-    author='Michael Coughlin',
-    author_email='michael.coughlin@ligo.org',
-    license='GPLv3',
-    url='https://github.com/mcoughlin/nmma_db/',
-
+    author="Michael Coughlin",
+    author_email="michael.coughlin@ligo.org",
+    license="GPLv3",
+    url="https://github.com/mcoughlin/nmma_db/",
     # package content
     packages=find_packages(),
     scripts=get_scripts(),
     include_package_data=False,
- 
     # dependencies
     install_requires=install_requires,
     tests_require=tests_require,
-
     # classifiers
     classifiers=[
-        'Development Status :: 4 - Beta',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Intended Audience :: Science/Research',
-        'Intended Audience :: End Users/Desktop',
-        'Intended Audience :: Developers',
-        'Natural Language :: English',
-        'Topic :: Scientific/Engineering',
-        'Topic :: Scientific/Engineering :: Astronomy',
-        'Topic :: Scientific/Engineering :: Physics',
-        'Operating System :: POSIX',
-        'Operating System :: Unix',
-        'Operating System :: MacOS',
-        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        "Development Status :: 4 - Beta",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Intended Audience :: Science/Research",
+        "Intended Audience :: End Users/Desktop",
+        "Intended Audience :: Developers",
+        "Natural Language :: English",
+        "Topic :: Scientific/Engineering",
+        "Topic :: Scientific/Engineering :: Astronomy",
+        "Topic :: Scientific/Engineering :: Physics",
+        "Operating System :: POSIX",
+        "Operating System :: Unix",
+        "Operating System :: MacOS",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     ],
 )
