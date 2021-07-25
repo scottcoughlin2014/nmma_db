@@ -3,11 +3,15 @@ from aiohttp import web
 from aiohttp_swagger3 import SwaggerDocs, ReDocUiSettings
 from bson.json_util import dumps
 from odmantic import Model
+from sqlalchemy.orm.exc import NoResultFound
 from typing import List, Mapping, Optional
 import uvloop
 
-from nmma_db.models import DBSession, LightcurveFit
+from nmma_db.models import DBSession, init_db, LightcurveFit
 from nmma_db.fit import fit_lc
+from nmma_db.utils import load_config
+
+cfg = load_config(config_file="config.yaml")["nmma"]
 
 
 class Handler:
@@ -123,25 +127,34 @@ class LightcurveFitHandler(Handler):
         cand_name = _data.get("cand_name")
         nmma_data = _data.get("nmma_data")
 
-        (
-            posterior_samples,
-            bestfit_params,
-            bestfit_lightcurve,
-            log_bayes_factor,
-        ) = fit_lc(model_name, cand_name, nmma_data)
+        try:
+            lcfit = LightcurveFit.query.filter_by(
+                model_name=model_name, object_id=cand_name
+            ).one()
+        except NoResultFound:
+            lcfit = LightcurveFit(object_id=cand_name, model_name=model_name)
+            lcfit.status = lcfit.Status.WORKING
+            DBSession().commit()
 
-        lcfit = LightcurveFit(
-            object_id=cand_name,
-            model_name=model_name,
-            posterior_samples=posterior_samples.to_json(),
-            bestfit_lightcurve=bestfit_lightcurve.to_json(),
-            log_bayes_factor=log_bayes_factor,
-        )
+        if not lcfit.status == LightcurveFit.Status.READY:
+            (
+                posterior_samples,
+                bestfit_params,
+                bestfit_lightcurve,
+                log_bayes_factor,
+            ) = fit_lc(model_name, cand_name, nmma_data)
 
-        DBSession().add(lcfit)
-        DBSession().commit()
+            lcfit.posterior_samples = posterior_samples.to_json()
+            lcfit.bestfit_lightcurve = bestfit_lightcurve.to_json()
+            lcfit.log_bayes_factor = log_bayes_factor
+            lcfit.status = LightcurveFit.Status.READY
 
-        return self.success(message="submitted")
+            DBSession().merge(lcfit)
+            DBSession().commit()
+
+            return self.success(message="submitted")
+        else:
+            return self.error(message="fit already exists")
 
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve fit by candidate and model name
@@ -202,10 +215,15 @@ class LightcurveFitHandler(Handler):
         ).one()
 
         if lcfit is not None:
-            return self.success(
-                message=f"Retrieved fit {model_name} of {cand_name}",
-                data=lcfit.to_dict(),
-            )
+            if not lcfit.status == LightcurveFit.Status.READY:
+                return self.error(
+                    message=f"Fit {model_name} of {cand_name} still running..."
+                )
+            else:
+                return self.success(
+                    message=f"Retrieved fit {model_name} of {cand_name}",
+                    data=lcfit.to_dict(),
+                )
         return self.error(message=f"Fit {model_name} of {cand_name} not found")
 
 
@@ -217,6 +235,11 @@ async def app_factory():
 
     # init app with auth and error handling middlewares
     app = web.Application()
+    app.session = init_db(
+        **cfg["database"],
+        autoflush=False,
+        engine_args={"pool_size": 10, "max_overflow": 15, "pool_recycle": 3600},
+    )
 
     # OpenAPI docs:
     s = SwaggerDocs(
@@ -249,4 +272,4 @@ uvloop.install()
 
 if __name__ == "__main__":
 
-    web.run_app(app_factory(), port=4000)
+    web.run_app(app_factory(), port=cfg["server"]["port"])

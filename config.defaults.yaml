@@ -1,0 +1,20 @@
+nmma:
+  server:
+    name: "NMMA"
+    version: "0.0.1"
+    description: "Back end for the NMMA framework"
+    host: "0.0.0.0"
+    port: "4001"
+    admin_username: "admin"
+    # fixme: use a strong password
+    admin_password: "admin"
+    # fixme: use ''.join(secrets.choice(string.ascii_lowercase + string.digits) for _ in range(32))
+    SECRET_KEY: "abc0123"
+    # fixme: use from cryptography.fernet import Fernet; Fernet.generate_key().decode()
+
+  database:
+    database: "nmma"
+    host: localhost
+    port: 5432
+    user: nmma
+    password:

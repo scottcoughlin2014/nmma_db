@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 from astropy.time import Time
@@ -5,6 +6,7 @@ from astropy.time import Time
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
+import yaml
 
 from nmma.em.model import (
     SVDLightCurveModel,
@@ -18,7 +20,15 @@ matplotlib.rcParams.update(
     {"font.size": 16, "text.usetex": True, "font.family": "Times New Roman"}
 )
 
-# Useful functions used by nmma_fit.py
+
+def load_config(path="./", config_file="config.yaml"):
+    """
+    Load config and secrets
+    """
+    with open(os.path.join(path, config_file)) as cyaml:
+        config = yaml.load(cyaml, Loader=yaml.FullLoader)
+
+    return config
 
 
 def get_bestfit_lightcurve(

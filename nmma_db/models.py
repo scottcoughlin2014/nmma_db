@@ -4,7 +4,7 @@ Database schema.
 
 from datetime import datetime, date
 import simplejson as json
-import os
+import enum
 
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
@@ -12,6 +12,8 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import JSONB
 from arrow.arrow import Arrow
+
+from nmma_db.utils import load_config
 
 DBSession = scoped_session(sessionmaker())
 EXECUTEMANY_PAGESIZE = 50000
@@ -25,6 +27,8 @@ data_types = {
     str: "str",
     list: "list",
 }
+
+cfg = load_config(config_file="config.yaml")["nmma"]
 
 
 class Encoder(json.JSONEncoder):
@@ -106,15 +110,50 @@ Base = declarative_base(cls=BaseMixin)
 
 # The db has to be initialized later; this is done by the app itself
 # See `app_server.py`
-def init_db(user, database, password=None, host=None, port=None):
+def init_db(
+    user,
+    database,
+    password=None,
+    host=None,
+    port=None,
+    autoflush=True,
+    engine_args={},
+):
+    """
+    Parameters
+    ----------
+    engine_args : dict
+        - `pool_size`:
+          The number of connections maintained to the DB. Default 5.
+
+        - `max_overflow`:
+          The number of additional connections that will be made as needed.
+           Once these extra connections have been used, they are discarded.
+          Default 10.
+
+        - `pool_recycle`:
+           Prevent the pool from using any connection that is older than this
+           (specified in seconds).
+           Default 3600.
+
+    """
     url = "postgresql://{}:{}@{}:{}/{}"
     url = url.format(user, password or "", host or "", port or "", database)
 
-    conn = sa.create_engine(url, client_encoding="utf8")
-    #                            executemany_mode='values',
-    #                            executemany_values_page_size=EXECUTEMANY_PAGESIZE)
+    default_engine_args = {
+        "pool_size": 5,
+        "max_overflow": 10,
+        "pool_recycle": 3600,
+    }
+    conn = sa.create_engine(
+        url,
+        client_encoding="utf8",
+        executemany_mode="values",
+        executemany_values_page_size=EXECUTEMANY_PAGESIZE,
+        **{**default_engine_args, **engine_args},
+    )
 
-    DBSession.configure(bind=conn)
+    DBSession.configure(bind=conn, autoflush=autoflush)
     Base.metadata.bind = conn
 
     return conn
@@ -148,6 +187,14 @@ class LightcurveFit(Base):
         sa.Float, nullable=True, comment="log(Bayes) factor for the run"
     )
 
+    class Status(enum.IntEnum):
+        WORKING = 0
+        READY = 1
+
+    status = sa.Column(
+        sa.Enum(Status), default=Status.WORKING, nullable=False, comment="Plan status"
+    )
+
 
 if __name__ == "__main__":
 
@@ -159,7 +206,11 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--purge", action="store_true", default=False)
     args = parser.parse_args()
 
-    conn = init_db(user=os.environ["USER"], database="nmma", port=5432)
+    conn = init_db(
+        user=cfg["database"]["user"],
+        database=cfg["database"]["database"],
+        port=cfg["database"]["port"],
+    )
 
     if args.init_db:
         print(f"Creating tables on database {conn.url.database}")
