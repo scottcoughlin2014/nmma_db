@@ -15,6 +15,5 @@ repos:
     rev: 3.8.4
     hooks:
       - id: flake8
-        args: ["--ignore=W391,E203,W503", "--max-line-length=131"]
         pass_filenames: true
         exclude: nb|.ipynb_checkpoints|data|dev|letsencrypt|logs|dask-worker-space|__init__.py
