@@ -144,10 +144,10 @@ def fit_lc(model_name, cand_name, nmma_data, prior_directory='./priors',
         #if fit_trigger_time:
         #    trigger_time += bestfit_params['KNtimeshift']
 
-        #plotName = os.path.join(plotdir, 'lightcurves.png')
-        #plot_bestfit_lightcurve(outfile.name, bestfit_lightcurve_magKN_KNGRB,
-        #                        error_budget, plotName)        
+        plotName = os.path.join(plotdir, 'lightcurves.png')
+        plot_bestfit_lightcurve(outfile.name, bestfit_lightcurve_magKN_KNGRB,
+                                error_budget, plotName)        
 
-    #shutil.rmtree(plotdir)
+    shutil.rmtree(plotdir)
 
     return posterior_samples, bestfit_params, bestfit_lightcurve_magKN_KNGRB, log_bayes_factor
