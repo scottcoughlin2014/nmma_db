@@ -82,8 +82,10 @@ def fit_lc(
                 quit()
             else:
                 # supernova
-                print("Not yet configured for Supernova")
-                quit()
+                if fit_trigger_time:
+                    prior = f"{prior_directory}/ZTF_sn_t0.prior"
+                else:
+                    prior = f"{prior_directory}/ZTF_sn.prior"
         else:
             if model_name == "TrPi2018":
                 # GRB
