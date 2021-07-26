@@ -1,0 +1,46 @@
+version: "3.7"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: api.Dockerfile
+    image: michaelwcoughlin/nmma_api:latest
+    volumes:
+      - data:/data
+    expose:
+      - "4001"
+    # fixme:
+    ports:
+      - "4001:4001"
+    links:
+      - db:db
+    restart: always
+    depends_on:
+      - db
+    networks:
+      - nmma
+
+  db:
+    image: postgres
+    expose:
+      - "5432"
+    # fixme:
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: nmma
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: nmma
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - data:/var/lib/postgresql/data/pgdata
+    restart: on-failure:3
+    networks:
+      - nmma
+
+volumes:
+  data:
+
+networks:
+  nmma:
