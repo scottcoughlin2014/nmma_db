@@ -22,7 +22,7 @@ services:
       - nmma
 
   db:
-    image: postgres
+    image: postgres:12.2
     expose:
       - "5432"
     # fixme:

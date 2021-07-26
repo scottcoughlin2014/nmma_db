@@ -206,11 +206,7 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--purge", action="store_true", default=False)
     args = parser.parse_args()
 
-    conn = init_db(
-        user=cfg["database"]["user"],
-        database=cfg["database"]["database"],
-        port=cfg["database"]["port"],
-    )
+    conn = init_db(**cfg["database"])
 
     if args.init_db:
         print(f"Creating tables on database {conn.url.database}")
