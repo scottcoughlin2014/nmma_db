@@ -18,3 +18,56 @@ nmma:
     port: 5432
     user: nmma
     password:
+
+  dask:
+    host: 127.0.0.1
+    scheduler_port: 8786
+    n_workers: 4
+    threads_per_worker: 1
+    lifetime: 24 hours
+    lifetime_stagger: 1 hours
+    lifetime_restart: true
+
+  # this is used to make supervisord.conf files at build time
+  supervisord:
+    api:
+      unix_http_server:
+        file: /dev/shm/supervisor.sock
+
+      supervisord:
+        logfile: /data/logs/supervisord.log
+        logfile_maxbytes: 50MB
+        logfile_backups: 20
+        loglevel: info
+        pidfile: /tmp/supervisord.pid
+        nodaemon: True
+        minfds: 1024
+        minprocs: 200
+
+      "rpcinterface:supervisor":
+        "supervisor.rpcinterface_factory": supervisor.rpcinterface:make_main_rpcinterface
+
+      supervisorctl:
+        serverurl: unix:///dev/shm/supervisor.sock
+
+      "program:gunicorn":
+        # fixme: adjust number of workers -w for your system (e.g. -w 40 for kowalski.caltech.edu)
+        command: >
+          /usr/local/bin/gunicorn
+          -w 2
+          --bind 0.0.0.0:4000
+          --worker-tmp-dir /dev/shm
+          --worker-class aiohttp.GunicornUVLoopWebWorker
+          --log-level=DEBUG
+          --timeout 36000
+          --max-requests 100000
+          api:app_factory
+        directory: /app
+        user: root
+        autostart: true
+        autorestart: true
+        stdout_logfile: /data/logs/gunicorn_stdout.log
+        stdout_logfile_maxbytes: 30MB
+        stderr_logfile: /data/logs/gunicorn_stderr.log
+        redirect_stderr: True
+        environment: "PRODUCTION=1"

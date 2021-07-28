@@ -51,8 +51,10 @@ def get_scripts(scripts_dir="bin"):
 # package dependencies
 install_requires = [
     "aiohttp",
+    "aiohttp-middlewares",
     "aiohttp_swagger3",
     "arrow",
+    "bcrypt",
     "bilby_pipe",
     "nmma",
     "odmantic",

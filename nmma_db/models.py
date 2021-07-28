@@ -13,7 +13,7 @@ from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import JSONB
 from arrow.arrow import Arrow
 
-from nmma_db.utils import load_config
+from nmma_db.utils import load_config, generate_password_hash, check_password_hash
 
 DBSession = scoped_session(sessionmaker())
 EXECUTEMANY_PAGESIZE = 50000
@@ -157,6 +157,23 @@ def init_db(
     Base.metadata.bind = conn
 
     return conn
+
+
+class User(Base):
+    """A simple user class for the database. Should be replaced by
+    something in Baselayer eventually."""
+
+    username = sa.Column(sa.String, primary_key=True, nullable=False, doc="Username")
+
+    email = sa.Column(sa.String, nullable=True, doc="User email")
+
+    password_hash = sa.Column(sa.String, nullable=True, doc="Username")
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
 
 class LightcurveFit(Base):
