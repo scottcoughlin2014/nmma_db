@@ -1,0 +1,4 @@
+.. automodule:: nmma_db.generate_supervisord_conf
+   :members:
+   :undoc-members:
+   :show-inheritance:

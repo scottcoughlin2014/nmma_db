@@ -1,0 +1,4 @@
+.. automodule:: nmma_db.models
+   :members:
+   :undoc-members:
+   :show-inheritance:
