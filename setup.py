@@ -56,15 +56,26 @@ install_requires = [
     "arrow",
     "bcrypt",
     "bilby_pipe",
-    "nmma",
     "odmantic",
-    "psycopg2",
+    "psycopg2-binary",
     "pymongo",
     "redis",
     "simplejson",
     "sqlalchemy",
     "uvloop",
 ]
+
+# For documenation
+extras_require = {
+    'doc': [
+        'matplotlib',
+        'ipython',
+        'sphinx',
+        'numpydoc',
+        'sphinx_rtd_theme',
+        'sphinxcontrib_programoutput',
+    ],
+}
 
 # test dependencies
 tests_require = [
@@ -98,6 +109,7 @@ setup(
     # dependencies
     install_requires=install_requires,
     tests_require=tests_require,
+    extras_require=extras_require,
     # classifiers
     classifiers=[
         "Development Status :: 4 - Beta",
